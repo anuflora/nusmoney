@@ -1,127 +1,77 @@
 // (c) Anuflora Systems 
 const balance = document.getElementById('balance');
-const money_plus = document.getElementById('money-plus');
-const money_minus = document.getElementById('money-minus');
+const money_plus = document.getElementById('deposit');
+const money_minus = document.getElementById('loan');
 const list = document.getElementById('list');
 const form = document.getElementById('form');
-const text = document.getElementById('text');
-const amount = document.getElementById('amount');
+const custname = document.getElementById('custname');
+const reco = document.getElementById('reco');
 
-// const dummyTransactions = [
-//   { id: 1, text: 'Flower', amount: -20 },
-//   { id: 2, text: 'Salary', amount: 300 },
-    {id: 2, customername: 'abc', bank: 'DBS', deposit: 10000, loan: 20000}
+const TransactionDataAll = [
+   { id: 1, customername: 'Flora', bank: 'DBS', deposit: 3000, loan: 2000 },
+   { id: 2, customername: 'Flora', bank: 'OCBC', deposit: 4000, loan: 2000 },
+   { id: 3, customername: 'Mikhil', bank: 'DBS', deposit: 3000, loan: 2000 },
+   { id: 4, customername: 'Sashil', bank: 'UOB', deposit: 6000, loan: 1000 },
+   { id: 5, customername: 'Jack', bank: 'UOB', deposit: 6000, loan: 8000 }
 
-//   { id: 3, text: 'Book', amount: -10 },
-//   { id: 4, text: 'Camera', amount: 150 }
-// ];
+  ];
 
-//READ from LOcal Storage and save it in variable localStorageTransactions
-const localStorageTransactions = JSON.parse(
-  localStorage.getItem('transactions')
-);
-
-//STORE all transactions as JS Object array in variable 'transactions'
-let transactions =
-  localStorage.getItem('transactions') !== null ? localStorageTransactions : [];
-
-
-
-// Add transaction
-function addTransaction(e) {
-  e.preventDefault();
-
-  if (text.value.trim() === '' || amount.value.trim() === '') {
-    alert('Please add a text and amount');
-  } else {
-    const transaction = {
-      id: generateID(),
-      text: text.value,
-      amount: +amount.value
-    };
-
-    transactions.push(transaction);
-
-    addTransactionDOM(transaction);
-
-    updateValues();
-
-    updateLocalStorage();
-
-    text.value = '';
-    amount.value = '';
-  }
-}
-
-// Generate random ID
-function generateID() {
-  return Math.floor(Math.random() * 100000000);
-}
+ var TransactionData = null;
 
 // Add transactions to DOM list
 function addTransactionDOM(transaction) {
-  // Get sign
-  const sign = transaction.amount < 0 ? '-' : '+';
+  const deposit_item = document.createElement('li');
 
-  const item = document.createElement('li');
-
-  // Add class based on value
-  item.classList.add(transaction.amount < 0 ? 'minus' : 'plus');
-
-  item.innerHTML = `
-    ${transaction.text} <span>${sign}${Math.abs(
-    transaction.amount
-  )}</span> <button class="delete-btn" onclick="removeTransaction(${
-    transaction.id
-  })">x</button>
+  deposit_item.classList.add('plus');
+  deposit_item.innerHTML = `
+  ${transaction.customername}-${transaction.bank}  <span> $ ${Math.abs(
+    transaction.deposit  
+  )}</span> 
   `;
 
-  list.appendChild(item);
+  list.appendChild(deposit_item);
+
+  const loan_item = document.createElement('li');
+
+  loan_item.classList.add('minus');
+  loan_item.innerHTML = `
+  ${transaction.customername}-${transaction.bank} <span> -$ ${Math.abs(
+    transaction.loan  
+  )}</span> 
+  `;
+
+  list.appendChild(loan_item);
 }
 
-// Update the balance, income and expense
+// Update the balance, deposit and loan
 function updateValues() {
-  const amounts = transactions.map(transaction => transaction.amount);
-
-  const total = amounts.reduce((acc, item) => (acc += item), 0).toFixed(2);
-
-  const income = amounts
-    .filter(item => item > 0)
-    .reduce((acc, item) => (acc += item), 0)
-    .toFixed(2);
-
-  const expense = (
-    amounts.filter(item => item < 0).reduce((acc, item) => (acc += item), 0) *
-    -1
-  ).toFixed(2);
-
-  balance.innerText = `$${total}`;
-  money_plus.innerText = `$${income}`;
-  money_minus.innerText = `$${expense}`;
+  const deposits = TransactionData.map(transaction => transaction.deposit);
+  const loans = TransactionData.map(transaction => transaction.loan);
+  const total_deposit = deposits.reduce((acc, item) => (acc += item), 0).toFixed(2);
+  const total_loan = loans.reduce((acc, item) => (acc += item), 0).toFixed(2);
+  const bal = total_deposit - total_loan;
+  balance.innerText = `$${bal}`;
+  money_plus.innerText = `$${total_deposit}`;
+  money_minus.innerText = `$${total_loan}`;
+  reco.innerText = (bal >= 0)? "You Have Sound Financial Health": "Your Financial Health is Weak";
 }
 
-// Remove transaction by ID
-function removeTransaction(id) {
-  transactions = transactions.filter(transaction => transaction.id !== id);
-
-  updateLocalStorage();
-
-  init();
-}
-
-// Update local storage transactions
-function updateLocalStorage() {
-  localStorage.setItem('transactions', JSON.stringify(transactions));
-}
-
-// Init app
 function init() {
   list.innerHTML = '';
-
-  transactions.forEach(addTransactionDOM);
+  reco.innerHTML = '';
+  TransactionData = [...TransactionDataAll];
+  TransactionData.forEach(addTransactionDOM);
   updateValues();
 }
 
-init();
+function filterTransaction(e) {
+  e.preventDefault();  //to prevent form from submitting and refreshing the page
+  list.innerHTML = '';
+  reco.innerHTML = '';
+  TransactionData = TransactionDataAll.filter(tran => tran.customername == custname.value);  
+  TransactionData.forEach(addTransactionDOM);
+  updateValues(); 
+}
 
-form.addEventListener('submit', addTransaction);
+init();
+form.addEventListener('submit', filterTransaction);
